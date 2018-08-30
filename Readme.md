@@ -1,7 +1,7 @@
 # Личный проект «Кексобукинг» [![Build status][travis-image]][travis-url]
 
 * Студент: [Виталий Жарков](https://up.htmlacademy.ru/javascript/15/user/808879).
-* Наставник: `Неизвестно`.
+* Наставник: [Олег Зубов] (https://htmlacademy.ru/profile/id42701).
 
 ---
 
