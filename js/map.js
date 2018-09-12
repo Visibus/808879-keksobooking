@@ -9,6 +9,12 @@ var aCheckin = ['12:00', '13:00', '14:00'];
 var aCheckout = ['12:00', '13:00', '14:00'];
 var aFeatures = ['wifi', 'dishwasher', 'parking', 'washer', 'elevator', 'conditioner'];
 var aPhotos = ['http://o0.github.io/assets/images/tokyo/hotel1.jpg', 'http://o0.github.io/assets/images/tokyo/hotel2.jpg', 'http://o0.github.io/assets/images/tokyo/hotel3.jpg'];
+var typeHousing = {
+  flat: 'Квартира',
+  bungalo: 'Бунгало',
+  house: 'Дом',
+  palace: 'Дворец'
+};
 
 function compareRandom() {
   return Math.random() - 0.5;
@@ -44,8 +50,9 @@ function copyArray(array, aLength) {
 var renderPin = function (objPin) {
   var pinElement = pinTemplate.cloneNode(true);
   pinElement.style = 'left: ' + objPin.location.x + 'px; top: ' + objPin.location.y + 'px;';
-  pinElement.querySelector('img').setAttribute('src', objPin.author.avatar);
-  pinElement.querySelector('img').setAttribute('alt', 'заголовок объявления');
+  var pinElementImg = pinElement.querySelector('img');
+  pinElementImg.setAttribute('src', objPin.author.avatar);
+  pinElementImg.setAttribute('alt', 'заголовок объявления');
   return pinElement;
 };
 
@@ -57,7 +64,7 @@ var renderCard = function (objCard) {
   cardElement.querySelector('.popup__title').textContent = objCard.offer.title;
   cardElement.querySelector('.popup__text--address').textContent = objCard.offer.address;
   cardElement.querySelector('.popup__text--price').textContent = objCard.offer.price + '₽/ночь';
-  cardElement.querySelector('.popup__type').textContent = typeHousing(objCard.offer.type);
+  cardElement.querySelector('.popup__type').textContent = typeHousing[objCard.offer.type];
   cardElement.querySelector('.popup__text--capacity').textContent = objCard.offer.rooms + ' комнаты для ' +
   objCard.offer.guests + ' гостей';
   cardElement.querySelector('.popup__text--time').textContent = 'Заезд после ' + objCard.offer.checkin +
@@ -73,7 +80,7 @@ var renderCard = function (objCard) {
   cardElement.querySelector('.popup__description').textContent = objCard.offer.description;
 
   // выбираем все child-объекты (фото жилья)
-  // debugger;
+
   childElement = cardElement.querySelector('.popup__photos');
 
   for (i = 0; i < aPhotos.length; i++) {
@@ -81,29 +88,16 @@ var renderCard = function (objCard) {
       childElement.querySelector('img').setAttribute('src', objCard.offer.photos[i]); // изменяем атрибут у элемента из шаблона
     } else {
       var newElement = childElement.querySelector('img').cloneNode(true); // добавляем новый элемент на основе шаблонного
-      newElement.src = objCard.offer.photos[i];
+      // newElement.src = objCard.offer.photos[i];
+      newElement.setAttribute('src', objCard.offer.photos[i]);
       childElement.appendChild(newElement);
     }
   }
-  cardElement.querySelector('.popup__avatar').src = objCard.author.avatar;
+  cardElement.querySelector('.popup__avatar').setAttribute('src', objCard.author.avatar);
 
   return cardElement;
 
 };
-
-function typeHousing(typeH) {
-  var typeRus = '';
-  if (typeH === 'flat') {
-    typeRus = 'Квартира';
-  } else if (typeH === 'bungalo') {
-    typeRus = 'Бунгало';
-  } else if (typeH === 'house') {
-    typeRus = 'Дом';
-  } else if (typeH === 'palace') {
-    typeRus = 'Дворец';
-  }
-  return typeRus;
-}
 
 // ф-ция для определения координаты х вернего левого угла блока метки
 function getMapX(x) {
