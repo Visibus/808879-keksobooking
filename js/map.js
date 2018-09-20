@@ -187,7 +187,6 @@ function generatePins() {
     fragment.appendChild(renderPin(aAdvertize[indPin]));
   }
   pinListElement.appendChild(fragment);
-//  debugger;
 }
 
 // ф-ция загрузки карточек объявлений
@@ -279,7 +278,10 @@ advertizeCapacity.addEventListener('input', onAdvertizeRoomNumberInput);
 // событие на отправку формы
 adForm.addEventListener('submit', function (evt) {
   // вывод сообщения об успешной отправке формы
-  showMessage(elemForm, elemSuccess, templForm, '.success');
+//  showMessage(elemForm, elemSuccess, templForm, '.success');
+  showMessageSuccessSendForm();
+
+
   // делаем форму неактивной
   initForm();
   evt.preventDefault();
@@ -312,6 +314,7 @@ function initForm() {
 // обработчик при изменении типа жилья
 function onAdvertizeInputTypeChange(evt) {
   advertizePrice.setAttribute('min', typeHousingMinPrice[evt.currentTarget.value]);
+  advertizePrice.setAttribute('placeholder', typeHousingMinPrice[evt.currentTarget.value]);
 }
 
 // обработчик ошибок поля "стоимость жилья"
@@ -371,7 +374,6 @@ function relationNumberRoomsCapacity() {
     for (var indGuest = 0; indGuest < countGuests.length; indGuest++) {
       if (advertizeCapacity[indRoom].value === countGuests[indGuest]) {
         advertizeCapacity[indRoom].removeAttribute('disabled');
-        break;
       } else {
         advertizeCapacity[indRoom].setAttribute('disabled', true);
       }
@@ -394,9 +396,7 @@ function onAdvertizeRoomNumberInput() {
   // признак валидности поля "кол-во комнат"
   var selectCapacityCorrect = false;
   // поиск в массиве с вариантами комнат и значения поля "кол-во комнат"
-  if (selectCapacity.indexOf(advertizeRoomNumber.value) >= 0) {
-    selectCapacityCorrect = true;
-  }
+  selectCapacityCorrect = !!~selectCapacity.indexOf(advertizeRoomNumber.value);
 
   if (!selectCapacityCorrect) {
     advertizeCapacity.setCustomValidity('Данное значение недопустимо. Выберите из списка корректное значение');
@@ -415,24 +415,22 @@ function deleteElementsMap(elemParent, classElem) {
   }
 }
 
-// функция отображения сообщения (успех или ошибка)
-function showMessage(elemParent, elem, elemTempate, classElem) {
-  var elemTemp = elemTempate.cloneNode(true);
+function showMessageSuccessSendForm() {
+  var elemTemp = templForm.cloneNode(true);
   var fragment = document.createDocumentFragment();
   fragment.appendChild(elemTemp);
-  elemParent.appendChild(fragment);
-  elem = document.querySelector(classElem);
+  elemForm.appendChild(fragment);
+  elemSuccess = document.querySelector('.success');
 
-  elem.addEventListener('click', function () {
-    elemParent.removeChild(elem);
+  elemSuccess.addEventListener('click', function () {
+    elemForm.removeChild(elemSuccess);
   });
 
   document.addEventListener('keydown', function (evt) {
     if (evt.keyCode === ESC_KEYCODE) {
-      elemParent.removeChild(elem);
+      elemForm.removeChild(elemSuccess);
     }
   });
-
 }
 
 // Генерируем массив объектов
