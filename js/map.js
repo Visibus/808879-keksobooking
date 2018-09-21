@@ -1,5 +1,7 @@
 'use strict';
 
+var ESC_KEYCODE = 27;
+
 var aAvatar = ['img/avatars/user01.png', 'img/avatars/user02.png', 'img/avatars/user03.png', 'img/avatars/user04.png', 'img/avatars/user05.png',
   'img/avatars/user06.png', 'img/avatars/user07.png', 'img/avatars/user08.png'];
 var aTitle = ['Большая уютная квартира', 'Маленькая неуютная квартира', 'Огромный прекрасный дворец', 'Маленький ужасный дворец',
@@ -15,6 +17,57 @@ var typeHousing = {
   house: 'Дом',
   palace: 'Дворец'
 };
+
+// объект соответствия типа жилья и минимальной стоимости за ночь
+var typeHousingMinPrice = {
+  flat: 1000,
+  bungalo: 0,
+  house: 5000,
+  palace: 10000
+};
+
+// DOM-объект с блоком карты
+var mapShow = document.querySelector('.map');
+// DOM-объект с формой заполнения объявления
+var adForm = document.querySelector('.ad-form');
+// DOM-объект с формой фильтрации объявлений
+var mapFiltes = document.querySelector('.map__filters');
+// DOM-объект метки объявлений
+var mapPinMain = document.querySelector('.map__pin--main');
+// элемент поля адреса в форме объявления
+var addressCoordinatePin = document.querySelector('#address');
+// блок, куда будут вставлены объекты (метки объявлений)
+var pinListElement = document.querySelector('.map__pins');
+// блок из шаблона, на основе которого будут добавлены метки объявлений
+var pinTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
+// блок, перед которым нужно вставить объявление
+var cardListElement = document.querySelector('.map__filters-container');
+// блок из шаблона, на основе которого будут добавлены карточки объявлений
+var cardTemplate = document.querySelector('#card').content.querySelector('.map__card');
+// блок из шаблона, на основе которого будут выведено сообщение об успешной отправке формы
+var templForm = document.querySelector('#success').content.querySelector('.success');
+// блок, куда будет вставлен блок об успешной отправке формы
+var elemForm = document.querySelector('main');
+// блок с сообщением об успешном отправлении формы
+var elemSuccess = document.querySelector('.success');
+// блок из шаблона, на основе которого будут выведено сообщение об ошибке при отправке формы
+// var templFormErr = document.querySelector('#error').content.querySelector('.error');
+// блок с сообщением об успешном отправлении формы
+// var elemError = document.querySelector('.error');
+// кнопка "очистить"
+var adFormReset = document.querySelector('.ad-form__reset');
+// тип жилья
+var advertizeType = document.querySelector('#type');
+// стоимость
+var advertizePrice = document.querySelector('#price');
+// время заезда
+var advertizeTimeIn = document.querySelector('#timein');
+// время выезда
+var advertizeTimeOut = document.querySelector('#timeout');
+// количество комнат
+var advertizeRoomNumber = document.querySelector('#room_number');
+// количество мест
+var advertizeCapacity = document.querySelector('#capacity');
 
 function compareRandom() {
   return Math.random() - 0.5;
@@ -134,7 +187,6 @@ function generatePins() {
     fragment.appendChild(renderPin(aAdvertize[indPin]));
   }
   pinListElement.appendChild(fragment);
-//  debugger;
 }
 
 // ф-ция загрузки карточек объявлений
@@ -205,6 +257,182 @@ var onCardButtonCloseClick = function (evt) {
   }
 };
 
+// событие на перетаскивание метки объявления
+function onMapMouseUp() {
+  formActivate(true);
+  generatePins(); // загружаем все метки
+  loadCard(); // загружаем все объявления
+  relationNumberRoomsCapacity(); // сразу запрещаем неправильные варианты кол-ва мест от выбранного кол-ва комнат
+  mapPinMain.removeEventListener('mouseup', onMapMouseUp); // отписываемся от события
+}
+
+
+advertizeType.addEventListener('change', onAdvertizeInputTypeChange);
+advertizeTimeIn.addEventListener('change', onAdvertizeTimeInOutChange);
+advertizeTimeOut.addEventListener('change', onAdvertizeTimeInOutChange);
+advertizeRoomNumber.addEventListener('change', onAdvertizeRoomNumberChange);
+advertizeRoomNumber.addEventListener('input', onAdvertizeRoomNumberInput);
+advertizePrice.addEventListener('input', onAdvertizePriceInput);
+advertizeCapacity.addEventListener('input', onAdvertizeRoomNumberInput);
+
+// событие на отправку формы
+adForm.addEventListener('submit', function (evt) {
+  // вывод сообщения об успешной отправке формы
+//  showMessage(elemForm, elemSuccess, templForm, '.success');
+  showMessageSuccessSendForm();
+
+
+  // делаем форму неактивной
+  initForm();
+  evt.preventDefault();
+});
+
+// событие на нажатие кнопки "очистить"
+adFormReset.addEventListener('click', function (evt) {
+  initForm();
+  evt.preventDefault();
+});
+
+// ф-ция сброса формы в начальное состояние (п 1.5 ТЗ)
+function initForm() {
+  formActivate(false);
+  // удаление меток
+  deleteElementsMap(pinListElement, '.map__pin');
+  // удаление объявлений
+  deleteElementsMap(mapShow, '.map__card');
+
+  adForm.reset();
+
+  // пересчитываем координату
+  addressCoordinatePin.value = defineCoordinatePin(mapPinMain);
+  // назаначаем обработчик на главную метку
+  mapPinMain.addEventListener('mouseup', onMapMouseUp);
+  // сразу запрещаем неправильные варианты кол-ва мест от выбранного кол-ва комнат
+  relationNumberRoomsCapacity();
+}
+
+// обработчик при изменении типа жилья
+function onAdvertizeInputTypeChange(evt) {
+  advertizePrice.setAttribute('min', typeHousingMinPrice[evt.currentTarget.value]);
+  advertizePrice.setAttribute('placeholder', typeHousingMinPrice[evt.currentTarget.value]);
+}
+
+// обработчик ошибок поля "стоимость жилья"
+function onAdvertizePriceInput(evt) {
+  if (advertizePrice.validity.rangeUnderflow) {
+    advertizePrice.setCustomValidity('Введенное значение меньше минимально допустимого : ' + evt.target.min);
+  } else if (advertizePrice.validity.rangeOverflow) {
+    advertizePrice.setCustomValidity('Введенное значение больше максимально допустимого : ' + evt.target.max);
+  } else if (advertizePrice.validity.valueMissing) {
+    advertizePrice.setCustomValidity('Обязательное поле');
+  } else {
+    advertizePrice.setCustomValidity('');
+  }
+}
+
+// обработчик при изменении полей "время заезда" и "время выезда"
+function onAdvertizeTimeInOutChange(evt) {
+  var timeInOut = parseInt(evt.currentTarget.value, 10);
+  if (evt.currentTarget.name === 'timein') {
+    synchroTimeInOut(advertizeTimeOut, timeInOut);
+  }
+  if (evt.currentTarget.name === 'timeout') {
+    synchroTimeInOut(advertizeTimeIn, timeInOut);
+  }
+}
+
+// ф-ция синхронизации значений в полях "время заезда" и "время выезда"
+function synchroTimeInOut(elemTime, valTime) {
+  for (var indTime = 0; indTime < elemTime.length; indTime++) {
+    if (parseInt(elemTime[indTime].value, 10) === valTime) {
+      elemTime[indTime].selected = true;
+    } else {
+      elemTime[indTime].selected = false;
+    }
+  }
+}
+
+// обработчик по изменению поля "кол-во комнат" -
+function onAdvertizeRoomNumberChange() {
+  relationNumberRoomsCapacity();
+}
+
+// функция устанавливает disabled на некорретных вариантах поля "кол-во мест"
+function relationNumberRoomsCapacity() {
+  var numberRooms = advertizeRoomNumber.value;
+  // объект соответствия поля "кол-во комнат" полю "кол-во мест"
+  var roomNumberCapacity = {
+    '1': ['1'], // 1 комната для 1 гостя
+    '2': ['1', '2'], // 2 комнаты для 1 или 2 гостей
+    '3': ['1', '2', '3'], // 3 комнаты для 1,2,3 гостей
+    '100': ['0'] // 100 не для гостей
+  };
+  // в массиве варианты количество мест , которые доступны для введенного значения в поле "количество комнат"
+  var countGuests = roomNumberCapacity[numberRooms];
+
+  for (var indRoom = 0; indRoom < advertizeCapacity.length; indRoom++) {
+    for (var indGuest = 0; indGuest < countGuests.length; indGuest++) {
+      if (advertizeCapacity[indRoom].value === countGuests[indGuest]) {
+        advertizeCapacity[indRoom].removeAttribute('disabled');
+      } else {
+        advertizeCapacity[indRoom].setAttribute('disabled', true);
+      }
+    }
+  }
+}
+
+// обработчик ошибок ввода в полях "кол-во мест" и "кол-во комнат"
+function onAdvertizeRoomNumberInput() {
+  // объект соответствия поля "кол-во мест" полю "кол-во комнат"
+  var capacityRoomNumber = {
+    '0': ['100'], // не для гостей - 100 комнат
+    '1': ['1', '2', '3'], // для 1 гостя возможно 1,2,3 комнаты
+    '2': ['2', '3'], // для 2 гостей 2 или 3 комнаты
+    '3': ['3'] // для 3 гостей 3 комнаты
+  };
+
+  // в массиве варианты комнат, которые доступны для введенного значения в поле "количество мест"
+  var selectCapacity = capacityRoomNumber[advertizeCapacity.value];
+  // признак валидности поля "кол-во комнат"
+  var selectCapacityCorrect = false;
+  // поиск в массиве с вариантами комнат и значения поля "кол-во комнат"
+  selectCapacityCorrect = !!~selectCapacity.indexOf(advertizeRoomNumber.value);
+
+  if (!selectCapacityCorrect) {
+    advertizeCapacity.setCustomValidity('Данное значение недопустимо. Выберите из списка корректное значение');
+  } else {
+    advertizeCapacity.setCustomValidity('');
+  }
+}
+
+// ф-ция удаления объектов в разметке
+function deleteElementsMap(elemParent, classElem) {
+  var childElement = elemParent.querySelectorAll(classElem);
+  for (var indElem = 0; indElem < childElement.length; indElem++) {
+    if (childElement[indElem].hasAttribute('data-id')) {
+      elemParent.removeChild(childElement[indElem]);
+    }
+  }
+}
+
+function showMessageSuccessSendForm() {
+  var elemTemp = templForm.cloneNode(true);
+  var fragment = document.createDocumentFragment();
+  fragment.appendChild(elemTemp);
+  elemForm.appendChild(fragment);
+  elemSuccess = document.querySelector('.success');
+
+  elemSuccess.addEventListener('click', function () {
+    elemForm.removeChild(elemSuccess);
+  });
+
+  document.addEventListener('keydown', function (evt) {
+    if (evt.keyCode === ESC_KEYCODE) {
+      elemForm.removeChild(elemSuccess);
+    }
+  });
+}
+
 // Генерируем массив объектов
 aAvatar = mixArray(aAvatar); // перемешали aAvatar
 aTitle = mixArray(aTitle); // перемешали aTitle
@@ -242,36 +470,7 @@ for (var i = 0; i <= 7; i++) {
   );
 }
 
-// событие на перетаскивание метки объявления
-function onMapMouseUp() {
-  formActivate(true);
-  generatePins(); // загружаем все метки
-  loadCard(); // загружаем все объявления
-  mapPinMain.removeEventListener('mouseup', onMapMouseUp); // отписываемся от события
-}
-
-// DOM-объект с блоком карты
-var mapShow = document.querySelector('.map');
-// DOM-объект с формой заполнения объявления
-var adForm = document.querySelector('.ad-form');
-// DOM-объект с формой фильтрации объявлений
-var mapFiltes = document.querySelector('.map__filters');
-// DOM-объект метки объявлений
-var mapPinMain = document.querySelector('.map__pin--main');
-// элемент поля адреса в форме объявления
-var addressCoordinatePin = document.querySelector('#address');
-// блок, куда будут вставлены объекты (метки объявлений)
-var pinListElement = document.querySelector('.map__pins');
-// блок из шаблона, на основе которого будут добавлены метки объявлений
-var pinTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
-// блок, перед которым нужно вставить объявление
-var cardListElement = document.querySelector('.map__filters-container');
-// блок из шаблона, на основе которого будут добавлены карточки объявлений
-var cardTemplate = document.querySelector('#card').content.querySelector('.map__card');
-
 // устанавливаем неактивный режим формы
 formActivate(false);
-
 addressCoordinatePin.value = defineCoordinatePin(mapPinMain);
-
 mapPinMain.addEventListener('mouseup', onMapMouseUp);
