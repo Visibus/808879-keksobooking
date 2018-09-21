@@ -394,9 +394,7 @@ function onAdvertizeRoomNumberInput() {
   // в массиве варианты комнат, которые доступны для введенного значения в поле "количество мест"
   var selectCapacity = capacityRoomNumber[advertizeCapacity.value];
   // признак валидности поля "кол-во комнат"
-  var selectCapacityCorrect = false;
-  // поиск в массиве с вариантами комнат и значения поля "кол-во комнат"
-  selectCapacityCorrect = !!~selectCapacity.indexOf(advertizeRoomNumber.value);
+  var selectCapacityCorrect = !!~selectCapacity.indexOf(advertizeRoomNumber.value);
 
   if (!selectCapacityCorrect) {
     advertizeCapacity.setCustomValidity('Данное значение недопустимо. Выберите из списка корректное значение');
@@ -416,10 +414,7 @@ function deleteElementsMap(elemParent, classElem) {
 }
 
 function showMessageSuccessSendForm() {
-  var elemTemp = templForm.cloneNode(true);
-  var fragment = document.createDocumentFragment();
-  fragment.appendChild(elemTemp);
-  elemForm.appendChild(fragment);
+  elemForm.appendChild(templForm);
   elemSuccess = document.querySelector('.success');
 
   elemSuccess.addEventListener('click', function () {
