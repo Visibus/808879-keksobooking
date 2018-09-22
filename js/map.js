@@ -469,3 +469,59 @@ for (var i = 0; i <= 7; i++) {
 formActivate(false);
 addressCoordinatePin.value = defineCoordinatePin(mapPinMain);
 mapPinMain.addEventListener('mouseup', onMapMouseUp);
+
+mapPinMain.addEventListener('mousedown', function (evt) {
+  evt.preventDefault();
+
+  var startCoords = {
+    x: evt.clientX,
+    y: evt.clientY
+  };
+
+  var dragged = false;
+
+  var onMouseMove = function (moveEvt) {
+    moveEvt.preventDefault();
+    dragged = true;
+
+    var shift = {
+      x: startCoords.x - moveEvt.clientX,
+      y: startCoords.y - moveEvt.clientY
+    };
+
+    startCoords = {
+      x: moveEvt.clientX,
+      y: moveEvt.clientY
+    };
+
+    if ((mapPinMain.offsetTop - shift.y) < 130) {
+      mapPinMain.style.top = 130 + 'px';
+    } else if ((mapPinMain.offsetTop - shift.y) > 630) {
+      mapPinMain.style.top = 630 + 'px';
+    } else {
+      mapPinMain.style.top = (mapPinMain.offsetTop - shift.y) + 'px';
+    }
+    mapPinMain.style.left = (mapPinMain.offsetLeft - shift.x) + 'px';
+    addressCoordinatePin.value = defineCoordinatePin(mapPinMain);
+
+  };
+
+  var onMouseUp = function (upEvt) {
+    upEvt.preventDefault();
+
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+
+    if (dragged) {
+      var onClickPreventDefault = function (evtDr) {
+        evtDr.preventDefault();
+        mapPinMain.removeEventListener('click', onClickPreventDefault);
+      };
+      mapPinMain.addEventListener('click', onClickPreventDefault);
+    }
+
+  };
+
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+});
