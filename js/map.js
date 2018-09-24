@@ -1,6 +1,10 @@
 'use strict';
 
 var ESC_KEYCODE = 27;
+var MIN_Y = 130;
+var MAX_Y = 630;
+var MIN_X = 0;
+var MAX_X = 1130;
 
 var aAvatar = ['img/avatars/user01.png', 'img/avatars/user02.png', 'img/avatars/user03.png', 'img/avatars/user04.png', 'img/avatars/user05.png',
   'img/avatars/user06.png', 'img/avatars/user07.png', 'img/avatars/user08.png'];
@@ -175,7 +179,7 @@ function defineCoordinatePin(elemMapPin) {
     var y = getMapY(parseInt(yTmp, 10));
   } else {
     x = parseInt(xTmp, 10) + 65 / 2;
-    y = parseInt(yTmp, 10) + 65 / 2;
+    y = parseInt(yTmp, 10) + 81;
   }
   return Math.round(x) + ', ' + Math.round(y);
 }
@@ -435,8 +439,8 @@ aTitle = mixArray(aTitle); // перемешали aTitle
 var aAdvertize = []; // массив из объектов-объявлений
 
 for (var i = 0; i <= 7; i++) {
-  var tempX = randomInt(0, 1140);
-  var tempY = randomInt(130, 630);
+  var tempX = randomInt(MIN_X, MAX_X);
+  var tempY = randomInt(MIN_Y, MAX_Y);
   var tempRooms = randomInt(1, 5); // случайное число от 1 до 5
   var tempGuests = tempRooms * randomInt(1, 3); // число гостей, определяется от количества комнат и случайного числа от 1 до 3
   aAdvertize.push({
@@ -469,3 +473,71 @@ for (var i = 0; i <= 7; i++) {
 formActivate(false);
 addressCoordinatePin.value = defineCoordinatePin(mapPinMain);
 mapPinMain.addEventListener('mouseup', onMapMouseUp);
+
+mapPinMain.addEventListener('mousedown', function (evt) {
+  evt.preventDefault();
+
+  var startCoords = {
+    x: evt.clientX,
+    y: evt.clientY
+  };
+
+  var dragged = false;
+
+  var onMouseMove = function (moveEvt) {
+    moveEvt.preventDefault();
+    dragged = true;
+
+    var shift = {
+      x: startCoords.x - moveEvt.clientX,
+      y: startCoords.y - moveEvt.clientY
+    };
+
+    startCoords = {
+      x: moveEvt.clientX,
+      y: moveEvt.clientY
+    };
+
+    var tmpY = mapPinMain.offsetTop - shift.y;
+    var tmpX = mapPinMain.offsetLeft - shift.x;
+
+    if (tmpY < MIN_Y) {
+      tmpY = MIN_Y + 'px';
+    } else if (tmpY > MAX_Y) {
+      tmpY = MAX_Y + 'px';
+    } else {
+      tmpY = tmpY + 'px';
+    }
+    mapPinMain.style.top = tmpY;
+
+    if (tmpX < MIN_X) {
+      tmpX = MIN_X + 'px';
+    } else if (tmpX > MAX_X) {
+      tmpX = MAX_X + 'px';
+    } else {
+      tmpX = tmpX + 'px';
+    }
+    mapPinMain.style.left = tmpX;
+    addressCoordinatePin.value = defineCoordinatePin(mapPinMain);
+
+  };
+
+  var onMouseUp = function (upEvt) {
+    upEvt.preventDefault();
+
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+
+    if (dragged) {
+      var onClickPreventDefault = function (evtDr) {
+        evtDr.preventDefault();
+        mapPinMain.removeEventListener('click', onClickPreventDefault);
+      };
+      mapPinMain.addEventListener('click', onClickPreventDefault);
+    }
+
+  };
+
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+});
