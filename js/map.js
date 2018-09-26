@@ -27,7 +27,7 @@
   // DOM-объект с формой заполнения объявления
   var adForm = document.querySelector('.ad-form');
   // DOM-объект с формой фильтрации объявлений
-  var mapFiltes = document.querySelector('.map__filters');
+  var mapFilters = document.querySelector('.map__filters');
   // DOM-объект метки объявлений
   var mapPinMain = document.querySelector('.map__pin--main');
   // элемент поля адреса в форме объявления
@@ -41,14 +41,21 @@
   // блок с сообщением об успешном отправлении формы
   // var elemError = document.querySelector('.error');
 
-  // получаем объекты из модуля data.js
+  // получаем значения из модуля data.js
   var aAdvertize = window.data.aAdvertize;
+  // получаем значения из модуля data.js
+  var data = window.data;
   // получаем ф-цию renderPin из модуля render-рin
   var renderPin = window.renderPin;
   // получаем ф-цию renderCard из модуля render-card
   var renderCard = window.renderCard;
   // экспорт ф-ции relationNumberRoomsCapacity из модуля units.js
   var units = window.units;
+  // экспорт из модуля backend.js
+  var backend = window.backend;
+  // экспорт из модуля message.js
+  var message = window.message;
+
 
   // ф-ция для определения координаты x блока метки
   function getMapX(x) {
@@ -125,7 +132,7 @@
 
     mapShow.classList.toggle('map--faded', !activate);
     adForm.classList.toggle('ad-form--disabled', !activate);
-    mapFiltes.classList.toggle('ad-form--disabled', !activate);
+    mapFilters.classList.toggle('ad-form--disabled', !activate);
 
     var childElement = adForm.querySelectorAll('fieldset');
     for (var i = 0; i < childElement.length; i++) {
@@ -154,9 +161,8 @@
 
   // событие на перетаскивание метки объявления
   function onMapMouseUp() {
+    backend.load(successHandler, errorHandler); // загружаем данные с сервера и записываем в массив data.aAdvertize
     formActivate(true);
-    generatePins(); // загружаем все метки
-    loadCard(); // загружаем все объявления
     units.relationNumberRoomsCapacity(); // сразу запрещаем неправильные варианты кол-ва мест от выбранного кол-ва комнат
     mapPinMain.removeEventListener('mouseup', onMapMouseUp); // отписываемся от события
   }
@@ -199,19 +205,19 @@
       var tmpY = mapPinMain.offsetTop - shift.y;
       var tmpX = mapPinMain.offsetLeft - shift.x;
 
-      if (tmpY < window.data.MIN_Y) {
-        tmpY = window.data.MIN_Y + 'px';
-      } else if (tmpY > window.data.MAX_Y) {
-        tmpY = window.data.MAX_Y + 'px';
+      if (tmpY < data.MIN_Y) {
+        tmpY = data.MIN_Y + 'px';
+      } else if (tmpY > data.MAX_Y) {
+        tmpY = data.MAX_Y + 'px';
       } else {
         tmpY = tmpY + 'px';
       }
       mapPinMain.style.top = tmpY;
 
-      if (tmpX < window.data.MIN_X) {
-        tmpX = window.data.MIN_X + 'px';
-      } else if (tmpX > window.data.MAX_X) {
-        tmpX = window.data.MAX_X + 'px';
+      if (tmpX < data.MIN_X) {
+        tmpX = data.MIN_X + 'px';
+      } else if (tmpX > data.MAX_X) {
+        tmpX = data.MAX_X + 'px';
       } else {
         tmpX = tmpX + 'px';
       }
@@ -242,6 +248,24 @@
 
   // сбрасываем форму в начальное неактивное состояние
   window.map.initForm();
+
+
+  var successHandler = function (loadAdvertize) {
+    aAdvertize = [];
+    for (var ii = 0; ii < loadAdvertize.length; ii++) {
+      aAdvertize.push(loadAdvertize[ii]);
+      aAdvertize[ii].id = ii;
+    }
+    generatePins(); // загружаем все метки
+    loadCard(); // загружаем все объявления
+  };
+
+  var errorHandler = function (errorMessage) {
+    message.showMessageErrorSendForm('Ошибка! Объявления не были загружены ' + errorMessage);
+  };
+
+  // var errorHandler = window.setup.errorHandler;
+
 
 })();
 
