@@ -22,7 +22,7 @@
 
       for (var indRoom = 0; indRoom < advertizeCapacity.length; indRoom++) {
         for (var indGuest = 0; indGuest < countGuests.length; indGuest++) {
-          if (!!~countGuests.indexOf(advertizeCapacity[indRoom].value)) {
+          if (~countGuests.indexOf(advertizeCapacity[indRoom].value)) {
             advertizeCapacity[indRoom].removeAttribute('disabled');
           } else {
             advertizeCapacity[indRoom].setAttribute('disabled', true);
