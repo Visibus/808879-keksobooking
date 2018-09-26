@@ -32,8 +32,7 @@
     var childElement = cardElement.querySelector('.popup__features').querySelectorAll('li');
     for (var i = 0; i < data.aFeatures.length; i++) {
     // Удаляемый элемент
-      var findInd = objCard.offer.features.indexOf(data.aFeatures[i]);
-      if (findInd === -1) {
+      if (!~objCard.offer.features.indexOf(data.aFeatures[i])) {
         cardElement.querySelector('.popup__features').removeChild(childElement[i]);
       }
     }
