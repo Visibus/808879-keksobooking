@@ -16,5 +16,6 @@
     pinElement.addEventListener('click', cb);
     return pinElement;
   };
+
 })();
 

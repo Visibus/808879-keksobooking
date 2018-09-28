@@ -11,6 +11,7 @@
       deleteElementsMap(mapShow, '.map__card');
 
       adForm.reset();
+      mapFilters.reset();
 
       // пересчитываем координату
       addressCoordinatePin.value = defineCoordinatePin(mapPinMain);
@@ -55,6 +56,8 @@
   var backend = window.backend;
   // экспорт из модуля message.js
   var message = window.message;
+  // экспорт из модуля debounce.js
+  var debounce = window.debounce;
 
 
   // ф-ция для определения координаты x блока метки
@@ -83,21 +86,25 @@
   }
 
   // ф-ция генерации меток объявлений
-  function generatePins() {
+  function generatePins(countPins, mask) {
     var fragment = document.createDocumentFragment();
-    for (var indPin = 0; indPin < aAdvertize.length; indPin++) {
-      fragment.appendChild(renderPin(aAdvertize[indPin], onPinClick));
+    for (var indPin = 0; indPin < countPins; indPin++) {
+      if (aAdvertize[indPin].rank === mask || aAdvertize[indPin].rank === null) {
+        fragment.appendChild(renderPin(aAdvertize[indPin], onPinClick));
+      }
     }
     pinListElement.appendChild(fragment);
   }
 
   // ф-ция загрузки карточек объявлений
-  function loadCard() {
+  function loadCard(countAdvertizes, maskS) {
     // отрисовка DOM-объектов (карточка объявления) через DocumentFragment
     var fragmentCard = document.createDocumentFragment();
-    for (var indCard = 0; indCard < aAdvertize.length; indCard++) {
-      var cardAdvertize = renderCard(aAdvertize[indCard], onCardButtonCloseClick);
-      fragmentCard.appendChild(cardAdvertize);
+    for (var indCard = 0; indCard < countAdvertizes; indCard++) {
+      if (aAdvertize[indCard].rank === maskS || aAdvertize[indCard].rank === null) {
+        var cardAdvertize = renderCard(aAdvertize[indCard], onCardButtonCloseClick);
+        fragmentCard.appendChild(cardAdvertize);
+      }
     }
     mapShow.insertBefore(fragmentCard, cardListElement);
   }
@@ -121,7 +128,7 @@
     var listCards = document.querySelectorAll('.map__card');
     for (var indCard = 0; indCard < listCards.length; indCard++) {
       var itemCard = listCards[indCard];
-      if (itemCard.getAttribute('data-id') === idPin) {
+      if ((itemCard.getAttribute('data-id') === idPin) || (idPin === null)) {
         itemCard.classList.add('hidden');
       }
     }
@@ -255,17 +262,174 @@
     for (var ii = 0; ii < loadAdvertize.length; ii++) {
       aAdvertize.push(loadAdvertize[ii]);
       aAdvertize[ii].id = ii;
+      aAdvertize[ii].rank = null;
     }
-    generatePins(); // загружаем все метки
-    loadCard(); // загружаем все объявления
+    generatePins(5); // загружаем 5 меток (ТЗ)
+    loadCard(5); // загружаем все объявления
   };
 
   var errorHandler = function (errorMessage) {
     message.showMessageErrorSendForm('Ошибка! Объявления не были загружены ' + errorMessage);
   };
 
-  // var errorHandler = window.setup.errorHandler;
+  // ф-ции работы с фильтром
 
+  var getRank = function (objCard) {
+    var rank = 0;
+    if ((objCard.offer.type === filterAdvertize['housing-type'][0]) && (filterAdvertize['housing-type'][0])) {
+      rank += 512;
+    }
+
+    switch (filterAdvertize['housing-price'][0]) {
+      case 'middle':
+        if (objCard.offer.price >= 10000 && objCard.offer.price <= 50000) {
+          rank += 256;
+        }
+        break;
+      case 'low':
+        if (objCard.offer.price < 10000) {
+          rank += 256;
+        }
+        break;
+      case 'high':
+        if (objCard.offer.price > 50000) {
+          rank += 256;
+        }
+        break;
+    }
+    if ((objCard.offer.rooms === parseInt(filterAdvertize['housing-rooms'][0], 10)) && (filterAdvertize['housing-rooms'][0])) {
+      rank += 128;
+    }
+
+    if ((objCard.offer.guests === parseInt(filterAdvertize['housing-guests'][0], 10)) && (filterAdvertize['housing-guests'][0])) {
+      rank += 64;
+    }
+
+    if (~objCard.offer.features.indexOf(filterAdvertize['filter-wifi'][0]) && (filterAdvertize['filter-wifi'][0])) {
+      rank += 32;
+    }
+
+    if (~objCard.offer.features.indexOf(filterAdvertize['filter-dishwasher'][0]) && (filterAdvertize['filter-dishwasher'][0])) {
+      rank += 16;
+    }
+
+    if (~objCard.offer.features.indexOf(filterAdvertize['filter-parking'][0]) && (filterAdvertize['filter-parking'][0])) {
+      rank += 8;
+    }
+
+    if (~objCard.offer.features.indexOf(filterAdvertize['filter-washer'][0]) && (filterAdvertize['filter-washer'][0])) {
+      rank += 4;
+    }
+
+    if (~objCard.offer.features.indexOf(filterAdvertize['filter-elevator'][0]) && (filterAdvertize['filter-elevator'][0])) {
+      rank += 2;
+    }
+
+    if (~objCard.offer.features.indexOf(filterAdvertize['filter-conditioner'][0]) && (filterAdvertize['filter-conditioner'][0])) {
+      rank += 1;
+    }
+    objCard.rank = rank;
+    return rank;
+  };
+
+  // 512, 256, 128 и т.д. для битовой маски
+  var filterAdvertize = {
+    'housing-type': ['', 512],
+    'housing-price': ['', 256],
+    'housing-rooms': ['', 128],
+    'housing-guests': ['', 64],
+    'filter-wifi': ['', 32],
+    'filter-dishwasher': ['', 16],
+    'filter-parking': ['', 8],
+    'filter-washer': ['', 4],
+    'filter-elevator': ['', 2],
+    'filter-conditioner': ['', 1]
+  };
+
+  function sumMask(filterAdv) {
+    var mask = 0;
+    for (var key in filterAdv) {
+      if (filterAdv[key][0]) {
+        mask += parseInt(filterAdv[key][1], 10);
+      }
+    }
+    return mask;
+  }
+
+  function namesComparator(leftName, rightName) {
+    if (leftName > rightName) {
+      return 1;
+    } else if (leftName < rightName) {
+      return -1;
+    } else {
+      return 0;
+    }
+  }
+  function advertizeComparator(left, right) {
+    var rankDiff = getRank(right) - getRank(left);
+    return rankDiff === 0 ? namesComparator(left.offer.title, right.offer.title) : rankDiff;
+  }
+
+  function onHousingFilterChange(evt) {
+    var valFilter = evt.currentTarget.value;
+    filterAdvertize[evt.currentTarget.name][0] = '';
+    if (valFilter !== 'any') {
+      filterAdvertize[evt.currentTarget.name][0] = valFilter;
+    }
+    debounce(updateFilter);
+  }
+
+  function onHousingFilterCheckBoxChange(evt) {
+    var valFilter = evt.currentTarget.checked;
+    var tempStr = evt.currentTarget.id;
+    var valFilterForRelation = tempStr.substr(tempStr.indexOf('-') + 1, tempStr.length);
+    filterAdvertize[evt.currentTarget.id][0] = '';
+    if (valFilter) {
+      filterAdvertize[evt.currentTarget.id][0] = valFilterForRelation;
+    }
+    debounce(updateFilter);
+  }
+
+  function updateFilter() {
+    filterPin(aAdvertize.sort(advertizeComparator));
+  }
+
+  var housingType = document.querySelector('#housing-type');
+  var housingPrice = document.querySelector('#housing-price');
+  var housingRooms = document.querySelector('#housing-rooms');
+  var housingGuests = document.querySelector('#housing-guests');
+
+  var filterWifi = document.querySelector('#filter-wifi');
+  var filterDishwasher = document.querySelector('#filter-dishwasher');
+  var filterParking = document.querySelector('#filter-parking');
+  var filterWasher = document.querySelector('#filter-washer');
+  var filterElevator = document.querySelector('#filter-elevator');
+  var filterConditioner = document.querySelector('#filter-conditioner');
+
+  housingType.addEventListener('change', onHousingFilterChange);
+  housingPrice.addEventListener('change', onHousingFilterChange);
+  housingRooms.addEventListener('change', onHousingFilterChange);
+  housingGuests.addEventListener('change', onHousingFilterChange);
+  filterWifi.addEventListener('change', onHousingFilterCheckBoxChange);
+  filterDishwasher.addEventListener('change', onHousingFilterCheckBoxChange);
+  filterParking.addEventListener('change', onHousingFilterCheckBoxChange);
+  filterWasher.addEventListener('change', onHousingFilterCheckBoxChange);
+  filterElevator.addEventListener('change', onHousingFilterCheckBoxChange);
+  filterConditioner.addEventListener('change', onHousingFilterCheckBoxChange);
+
+  // ф-ция загрузки меток и карточек объявлений при фильтрации
+  function filterPin() {
+    deleteElementsMap(pinListElement, '.map__pin');
+    closeCard(null);
+    var takeNumber = aAdvertize.length > 5 ? 5 : aAdvertize.length;
+    var sMask = sumMask(filterAdvertize);
+    generatePins(takeNumber, sMask);
+    loadCard(takeNumber, sMask);
+    aAdvertize.forEach(function (adv) {
+      adv.rank = 0;
+    });
+
+  }
 
 })();
 
