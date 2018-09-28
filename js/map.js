@@ -425,8 +425,8 @@
     var sMask = sumMask(filterAdvertize);
     generatePins(takeNumber, sMask);
     loadCard(takeNumber, sMask);
-    aAdvertize.forEach(function (rank) {
-      rank.rank = 0;
+    aAdvertize.forEach(function (adv) {
+      adv.rank = 0;
     });
 
   }
