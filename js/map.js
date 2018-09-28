@@ -272,7 +272,7 @@
     message.showMessageErrorSendForm('Ошибка! Объявления не были загружены ' + errorMessage);
   };
 
-  // var errorHandler = window.setup.errorHandler;
+  // ф-ции работы с фильтром
 
   var getRank = function (objCard) {
     var rank = 0;
@@ -332,6 +332,7 @@
     return rank;
   };
 
+  // 512, 256, 128 и т.д. для битовой маски
   var filterAdvertize = {
     'housing-type': ['', 512],
     'housing-price': ['', 256],
@@ -393,12 +394,12 @@
     filterPin(aAdvertize.sort(advertizeComparator));
   }
 
-  var housingType = document.querySelector('#housing-type'); // type
-  var housingPrice = document.querySelector('#housing-price'); // price
-  var housingRooms = document.querySelector('#housing-rooms'); // rooms
-  var housingGuests = document.querySelector('#housing-guests'); // guests
+  var housingType = document.querySelector('#housing-type');
+  var housingPrice = document.querySelector('#housing-price');
+  var housingRooms = document.querySelector('#housing-rooms');
+  var housingGuests = document.querySelector('#housing-guests');
 
-  var filterWifi = document.querySelector('#filter-wifi'); // features
+  var filterWifi = document.querySelector('#filter-wifi');
   var filterDishwasher = document.querySelector('#filter-dishwasher');
   var filterParking = document.querySelector('#filter-parking');
   var filterWasher = document.querySelector('#filter-washer');
