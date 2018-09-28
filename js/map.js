@@ -86,21 +86,25 @@
   }
 
   // ф-ция генерации меток объявлений
-  function generatePins(countPins) {
+  function generatePins(countPins, mask) {
     var fragment = document.createDocumentFragment();
     for (var indPin = 0; indPin < countPins; indPin++) {
-      fragment.appendChild(renderPin(aAdvertize[indPin], onPinClick));
+      if (aAdvertize[indPin].rank === mask || aAdvertize[indPin].rank === null) {
+        fragment.appendChild(renderPin(aAdvertize[indPin], onPinClick));
+      }
     }
     pinListElement.appendChild(fragment);
   }
 
   // ф-ция загрузки карточек объявлений
-  function loadCard(countAdvertizes) {
+  function loadCard(countAdvertizes, maskS) {
     // отрисовка DOM-объектов (карточка объявления) через DocumentFragment
     var fragmentCard = document.createDocumentFragment();
     for (var indCard = 0; indCard < countAdvertizes; indCard++) {
-      var cardAdvertize = renderCard(aAdvertize[indCard], onCardButtonCloseClick);
-      fragmentCard.appendChild(cardAdvertize);
+      if (aAdvertize[indCard].rank === maskS || aAdvertize[indCard].rank === null) {
+        var cardAdvertize = renderCard(aAdvertize[indCard], onCardButtonCloseClick);
+        fragmentCard.appendChild(cardAdvertize);
+      }
     }
     mapShow.insertBefore(fragmentCard, cardListElement);
   }
@@ -258,6 +262,7 @@
     for (var ii = 0; ii < loadAdvertize.length; ii++) {
       aAdvertize.push(loadAdvertize[ii]);
       aAdvertize[ii].id = ii;
+      aAdvertize[ii].rank = null;
     }
     generatePins(5); // загружаем 5 меток (ТЗ)
     loadCard(5); // загружаем все объявления
@@ -271,74 +276,84 @@
 
   var getRank = function (objCard) {
     var rank = 0;
-    if ((objCard.offer.type === filterAdvertize['housing-type']) && (filterAdvertize['housing-type'])) {
-      rank += 10;
+    if ((objCard.offer.type === filterAdvertize['housing-type'][0]) && (filterAdvertize['housing-type'][0])) {
+      rank += 512;
     }
 
-    switch (filterAdvertize['housing-price']) {
+    switch (filterAdvertize['housing-price'][0]) {
       case 'middle':
         if (objCard.offer.price >= 10000 && objCard.offer.price <= 50000) {
-          rank += 9;
+          rank += 256;
         }
         break;
       case 'low':
         if (objCard.offer.price < 10000) {
-          rank += 9;
+          rank += 256;
         }
         break;
       case 'high':
         if (objCard.offer.price > 50000) {
-          rank += 9;
+          rank += 256;
         }
         break;
     }
-    if ((objCard.offer.rooms === parseInt(filterAdvertize['housing-rooms'], 10)) && (filterAdvertize['housing-rooms'])) {
+    if ((objCard.offer.rooms === parseInt(filterAdvertize['housing-rooms'][0], 10)) && (filterAdvertize['housing-rooms'][0])) {
+      rank += 128;
+    }
+
+    if ((objCard.offer.guests === parseInt(filterAdvertize['housing-guests'][0], 10)) && (filterAdvertize['housing-guests'][0])) {
+      rank += 64;
+    }
+
+    if (~objCard.offer.features.indexOf(filterAdvertize['filter-wifi'][0]) && (filterAdvertize['filter-wifi'][0])) {
+      rank += 32;
+    }
+
+    if (~objCard.offer.features.indexOf(filterAdvertize['filter-dishwasher'][0]) && (filterAdvertize['filter-dishwasher'][0])) {
+      rank += 16;
+    }
+
+    if (~objCard.offer.features.indexOf(filterAdvertize['filter-parking'][0]) && (filterAdvertize['filter-parking'][0])) {
       rank += 8;
     }
 
-    if ((objCard.offer.guests === parseInt(filterAdvertize['housing-guests'], 10)) && (filterAdvertize['housing-guests'])) {
-      rank += 7;
-    }
-
-    if (~objCard.offer.features.indexOf(filterAdvertize['filter-wifi']) && (filterAdvertize['filter-wifi'])) {
-      rank += 6;
-    }
-
-    if (~objCard.offer.features.indexOf(filterAdvertize['filter-dishwasher']) && (filterAdvertize['filter-dishwasher'])) {
-      rank += 5;
-    }
-
-    if (~objCard.offer.features.indexOf(filterAdvertize['filter-parking']) && (filterAdvertize['filter-parking'])) {
+    if (~objCard.offer.features.indexOf(filterAdvertize['filter-washer'][0]) && (filterAdvertize['filter-washer'][0])) {
       rank += 4;
     }
 
-    if (~objCard.offer.features.indexOf(filterAdvertize['filter-washer']) && (filterAdvertize['filter-washer'])) {
-      rank += 3;
-    }
-
-    if (~objCard.offer.features.indexOf(filterAdvertize['filter-elevator']) && (filterAdvertize['filter-elevator'])) {
+    if (~objCard.offer.features.indexOf(filterAdvertize['filter-elevator'][0]) && (filterAdvertize['filter-elevator'][0])) {
       rank += 2;
     }
 
-    if (~objCard.offer.features.indexOf(filterAdvertize['filter-conditioner']) && (filterAdvertize['filter-conditioner'])) {
+    if (~objCard.offer.features.indexOf(filterAdvertize['filter-conditioner'][0]) && (filterAdvertize['filter-conditioner'][0])) {
       rank += 1;
     }
-
+    objCard.rank = rank;
     return rank;
   };
 
   var filterAdvertize = {
-    'housing-type': '',
-    'housing-price': '',
-    'housing-rooms': '',
-    'housing-guests': '',
-    'filter-wifi': '',
-    'filter-dishwasher': '',
-    'filter-parking': '',
-    'filter-washer': '',
-    'filter-elevator': '',
-    'filter-conditioner': ''
+    'housing-type': ['', 512],
+    'housing-price': ['', 256],
+    'housing-rooms': ['', 128],
+    'housing-guests': ['', 64],
+    'filter-wifi': ['', 32],
+    'filter-dishwasher': ['', 16],
+    'filter-parking': ['', 8],
+    'filter-washer': ['', 4],
+    'filter-elevator': ['', 2],
+    'filter-conditioner': ['', 1]
   };
+
+  function sumMask(filterAdv) {
+    var mask = 0;
+    for (var key in filterAdv) {
+      if (filterAdv[key][0]) {
+        mask += parseInt(filterAdv[key][1], 10);
+      }
+    }
+    return mask;
+  }
 
   function namesComparator(leftName, rightName) {
     if (leftName > rightName) {
@@ -356,9 +371,9 @@
 
   function onHousingFilterChange(evt) {
     var valFilter = evt.currentTarget.value;
-    filterAdvertize[evt.currentTarget.name] = '';
+    filterAdvertize[evt.currentTarget.name][0] = '';
     if (valFilter !== 'any') {
-      filterAdvertize[evt.currentTarget.name] = valFilter;
+      filterAdvertize[evt.currentTarget.name][0] = valFilter;
     }
     debounce(updateFilter);
   }
@@ -367,9 +382,9 @@
     var valFilter = evt.currentTarget.checked;
     var tempStr = evt.currentTarget.id;
     var valFilterForRelation = tempStr.substr(tempStr.indexOf('-') + 1, tempStr.length);
-    filterAdvertize[evt.currentTarget.id] = '';
+    filterAdvertize[evt.currentTarget.id][0] = '';
     if (valFilter) {
-      filterAdvertize[evt.currentTarget.id] = valFilterForRelation;
+      filterAdvertize[evt.currentTarget.id][0] = valFilterForRelation;
     }
     debounce(updateFilter);
   }
@@ -406,8 +421,13 @@
     deleteElementsMap(pinListElement, '.map__pin');
     closeCard(null);
     var takeNumber = aAdvertize.length > 5 ? 5 : aAdvertize.length;
-    generatePins(takeNumber);
-    loadCard(takeNumber);
+    var sMask = sumMask(filterAdvertize);
+    generatePins(takeNumber, sMask);
+    loadCard(takeNumber, sMask);
+    aAdvertize.forEach(function (rank) {
+      rank.rank = 0;
+    });
+
   }
 
 })();
