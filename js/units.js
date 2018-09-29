@@ -2,14 +2,14 @@
 
 (function () {
   // количество мест
-  var advertizeCapacity = document.querySelector('#capacity');
+  var advertizeCapacityElement = document.querySelector('#capacity');
   // количество комнат
-  var advertizeRoomNumber = document.querySelector('#room_number');
+  var advertizeRoomNumberElement = document.querySelector('#room_number');
 
   // экспортируемая функция устанавливает disabled на некорретных вариантах поля "кол-во мест"
   window.units = {
-    relationNumberRoomsCapacity: function () {
-      var numberRooms = advertizeRoomNumber.value;
+    setRelationNumberRoomsCapacity: function () {
+      var numberRooms = advertizeRoomNumberElement.value;
       // объект соответствия поля "кол-во комнат" полю "кол-во мест"
       var roomNumberCapacity = {
         '1': ['1'], // 1 комната для 1 гостя
@@ -20,12 +20,12 @@
       // в массиве варианты количество мест , которые доступны для введенного значения в поле "количество комнат"
       var countGuests = roomNumberCapacity[numberRooms];
 
-      for (var indRoom = 0; indRoom < advertizeCapacity.length; indRoom++) {
+      for (var indRoom = 0; indRoom < advertizeCapacityElement.length; indRoom++) {
         for (var indGuest = 0; indGuest < countGuests.length; indGuest++) {
-          if (~countGuests.indexOf(advertizeCapacity[indRoom].value)) {
-            advertizeCapacity[indRoom].removeAttribute('disabled');
+          if (~countGuests.indexOf(advertizeCapacityElement[indRoom].value)) {
+            advertizeCapacityElement[indRoom].removeAttribute('disabled');
           } else {
-            advertizeCapacity[indRoom].setAttribute('disabled', true);
+            advertizeCapacityElement[indRoom].setAttribute('disabled', true);
           }
         }
       }

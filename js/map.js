@@ -8,140 +8,131 @@
       // удаление меток
       deleteElementsMap(pinListElement, '.map__pin');
       // удаление объявлений
-      deleteElementsMap(mapShow, '.map__card');
+      deleteElementsMap(mapShowElement, '.map__card');
 
-      adForm.reset();
-      mapFilters.reset();
+      adFormElement.reset();
+      mapFiltersElement.reset();
 
       // пересчитываем координату
-      addressCoordinatePin.value = defineCoordinatePin(mapPinMain);
-      // назаначаем обработчик на главную метку
-      mapPinMain.addEventListener('mouseup', onMapMouseUp);
+      addressCoordinatePinElement.value = defineCoordinatePin(mapPinMainElement);
+      // назначаем обработчик на главную метку
+      mapPinMainElement.addEventListener('mouseup', onMapMouseUp);
 
       // сразу запрещаем неправильные варианты кол-ва мест от выбранного кол-ва комнат
-      units.relationNumberRoomsCapacity();
+      units.setRelationNumberRoomsCapacity();
+
+      for (var key in filterAdvertize) {
+        if (filterAdvertize.hasOwnProperty(key)) {
+          filterAdvertize[key][0] = '';
+        }
+      }
+
     }
   };
 
   // DOM-объект с блоком карты
-  var mapShow = document.querySelector('.map');
+  var mapShowElement = document.querySelector('.map');
   // DOM-объект с формой заполнения объявления
-  var adForm = document.querySelector('.ad-form');
+  var adFormElement = document.querySelector('.ad-form');
   // DOM-объект с формой фильтрации объявлений
-  var mapFilters = document.querySelector('.map__filters');
-  // DOM-объект метки объявлений
-  var mapPinMain = document.querySelector('.map__pin--main');
+  var mapFiltersElement = document.querySelector('.map__filters');
+  // DOM-объект метки объявления
+  var mapPinMainElement = document.querySelector('.map__pin--main');
   // элемент поля адреса в форме объявления
-  var addressCoordinatePin = document.querySelector('#address');
+  var addressCoordinatePinElement = document.querySelector('#address');
   // блок, куда будут вставлены объекты (метки объявлений)
   var pinListElement = document.querySelector('.map__pins');
   // блок, перед которым нужно вставить объявление
   var cardListElement = document.querySelector('.map__filters-container');
-  // блок из шаблона, на основе которого будут выведено сообщение об ошибке при отправке формы
-  // var templFormErr = document.querySelector('#error').content.querySelector('.error');
-  // блок с сообщением об успешном отправлении формы
-  // var elemError = document.querySelector('.error');
 
-  // получаем значения из модуля data.js
-  var aAdvertize = window.data.aAdvertize;
-  // получаем значения из модуля data.js
+  var aAdvertizes = window.data.aAdvertizes;
   var data = window.data;
-  // получаем ф-цию renderPin из модуля render-рin
   var renderPin = window.renderPin;
-  // получаем ф-цию renderCard из модуля render-card
   var renderCard = window.renderCard;
-  // экспорт ф-ции relationNumberRoomsCapacity из модуля units.js
   var units = window.units;
-  // экспорт из модуля backend.js
   var backend = window.backend;
-  // экспорт из модуля message.js
   var message = window.message;
-  // экспорт из модуля debounce.js
   var debounce = window.debounce;
 
-
   // ф-ция для определения координаты x блока метки
-  function getMapX(x) {
-    return x + 50 / 2;
-  }
+  var getMapX = function (x) {
+    return x + data.WIDTH_PIN / 2;
+  };
 
   // ф-ция для определения координаты y блока метки
-  function getMapY(y) {
-    return y + 70;
-  }
+  var getMapY = function (y) {
+    return y + data.HEIGHT_PIN;
+  };
 
   // функция определения координаты метки объявления
-  function defineCoordinatePin(elemMapPin) {
-    var xTmp = elemMapPin.style.left;
-    var yTmp = elemMapPin.style.top;
+  var defineCoordinatePin = function (mapPinElement) {
+    var xTmp = mapPinElement.style.left;
+    var yTmp = mapPinElement.style.top;
     // если элемент является сгенерированной меткой объявления (наличие атрибута 'data-id')
-    if (elemMapPin.hasAttribute('data-id')) {
+    if (mapPinElement.hasAttribute('data-id')) {
       var x = getMapX(parseInt(xTmp, 10));
       var y = getMapY(parseInt(yTmp, 10));
     } else {
-      x = parseInt(xTmp, 10) + 65 / 2;
-      y = parseInt(yTmp, 10) + 81;
+      x = parseInt(xTmp, 10) + data.WIDTH_PIN_MAIN / 2;
+      y = parseInt(yTmp, 10) + data.HEIGHT_PIN_MAIN;
     }
     return Math.round(x) + ', ' + Math.round(y);
-  }
+  };
 
   // ф-ция генерации меток объявлений
-  function generatePins(countPins, mask) {
+  var generatePins = function (countPins, mask) {
     var fragment = document.createDocumentFragment();
     for (var indPin = 0; indPin < countPins; indPin++) {
-      if (aAdvertize[indPin].rank === mask || aAdvertize[indPin].rank === null) {
-        fragment.appendChild(renderPin(aAdvertize[indPin], onPinClick));
+      if (aAdvertizes[indPin].rank === mask || aAdvertizes[indPin].rank === null) {
+        fragment.appendChild(renderPin(aAdvertizes[indPin], onPinClick));
       }
     }
     pinListElement.appendChild(fragment);
-  }
+  };
 
   // ф-ция загрузки карточек объявлений
-  function loadCard(countAdvertizes, maskS) {
-    // отрисовка DOM-объектов (карточка объявления) через DocumentFragment
+  var loadCard = function (countAdvertizes, maskS) {
     var fragmentCard = document.createDocumentFragment();
     for (var indCard = 0; indCard < countAdvertizes; indCard++) {
-      if (aAdvertize[indCard].rank === maskS || aAdvertize[indCard].rank === null) {
-        var cardAdvertize = renderCard(aAdvertize[indCard], onCardButtonCloseClick);
+      if (aAdvertizes[indCard].rank === maskS || aAdvertizes[indCard].rank === null) {
+        var cardAdvertize = renderCard(aAdvertizes[indCard], onCardButtonCloseClick);
         fragmentCard.appendChild(cardAdvertize);
       }
     }
-    mapShow.insertBefore(fragmentCard, cardListElement);
-  }
+    mapShowElement.insertBefore(fragmentCard, cardListElement);
+  };
 
   // функция показа формы карточки объявления
-  function showCard(idPin) {
-    var listCards = document.querySelectorAll('.map__card');
-    for (var indCard = 0; indCard < listCards.length; indCard++) {
-      var itemCard = listCards[indCard];
-      if (itemCard.getAttribute('data-id') === idPin) {
-        itemCard.classList.remove('hidden');
+  var showCard = function (idPin) {
+    var listCardsElement = document.querySelectorAll('.map__card');
+    for (var indCard = 0; indCard < listCardsElement.length; indCard++) {
+      var itemCardElement = listCardsElement[indCard];
+      if (itemCardElement.getAttribute('data-id') === idPin) {
+        itemCardElement.classList.remove('hidden');
       } else {
-        itemCard.classList.add('hidden');
+        itemCardElement.classList.add('hidden');
       }
     }
-  }
+  };
 
   // функция, скрывающая форму карточки объявления
-  function closeCard(idPin) {
-
-    var listCards = document.querySelectorAll('.map__card');
-    for (var indCard = 0; indCard < listCards.length; indCard++) {
-      var itemCard = listCards[indCard];
-      if ((itemCard.getAttribute('data-id') === idPin) || (idPin === null)) {
-        itemCard.classList.add('hidden');
+  var closeCard = function (idPin) {
+    var listCardsElement = document.querySelectorAll('.map__card');
+    for (var indCard = 0; indCard < listCardsElement.length; indCard++) {
+      var itemCardElement = listCardsElement[indCard];
+      if ((itemCardElement.getAttribute('data-id') === idPin) || (idPin === null)) {
+        itemCardElement.classList.add('hidden');
       }
     }
-  }
+  };
 
   // функция перевода формы в невактивное/активное состояние
-  function formActivate(activate) {
+  var formActivate = function (activate) {
+    mapShowElement.classList.toggle('map--faded', !activate);
+    adFormElement.classList.toggle('ad-form--disabled', !activate);
+    mapFiltersElement.classList.toggle('ad-form--disabled', !activate);
 
-    mapShow.classList.toggle('map--faded', !activate);
-    adForm.classList.toggle('ad-form--disabled', !activate);
-    mapFilters.classList.toggle('ad-form--disabled', !activate);
-
-    var childElement = adForm.querySelectorAll('fieldset');
+    var childElement = adFormElement.querySelectorAll('fieldset');
     for (var i = 0; i < childElement.length; i++) {
       if (activate) {
         childElement[i].removeAttribute('disabled');
@@ -149,13 +140,13 @@
         childElement[i].setAttribute('disabled', true);
       }
     }
-  }
+  };
 
-  // событие на нажатие на метку объявления
+  // событие на нажатие метки объявления
   var onPinClick = function (evt) {
     if (evt.currentTarget.hasAttribute('data-id')) {
       showCard(evt.currentTarget.getAttribute('data-id'));
-      addressCoordinatePin.value = defineCoordinatePin(evt.currentTarget);
+      addressCoordinatePinElement.value = defineCoordinatePin(evt.currentTarget);
     }
   };
 
@@ -167,25 +158,25 @@
   };
 
   // событие на перетаскивание метки объявления
-  function onMapMouseUp() {
-    backend.load(successHandler, errorHandler); // загружаем данные с сервера и записываем в массив data.aAdvertize
+  var onMapMouseUp = function () {
+    backend.load(onSuccessGetData, onErrorGetData); // загружаем данные с сервера и записываем в массив data.aAdvertize
     formActivate(true);
-    units.relationNumberRoomsCapacity(); // сразу запрещаем неправильные варианты кол-ва мест от выбранного кол-ва комнат
-    mapPinMain.removeEventListener('mouseup', onMapMouseUp); // отписываемся от события
-  }
+    units.setRelationNumberRoomsCapacity(); // сразу запрещаем неправильные варианты кол-ва мест от выбранного кол-ва комнат
+    mapPinMainElement.removeEventListener('mouseup', onMapMouseUp); // отписываемся от события
+  };
 
   // ф-ция удаления объектов в разметке
-  function deleteElementsMap(elemParent, classElem) {
+  var deleteElementsMap = function (elemParent, classElem) {
     var childElement = elemParent.querySelectorAll(classElem);
     for (var indElem = 0; indElem < childElement.length; indElem++) {
       if (childElement[indElem].hasAttribute('data-id')) {
         elemParent.removeChild(childElement[indElem]);
       }
     }
-  }
+  };
 
   // ф-ция перетаскивания метки объявления
-  mapPinMain.addEventListener('mousedown', function (evt) {
+  mapPinMainElement.addEventListener('mousedown', function (evt) {
     evt.preventDefault();
 
     var startCoords = {
@@ -209,8 +200,8 @@
         y: moveEvt.clientY
       };
 
-      var tmpY = mapPinMain.offsetTop - shift.y;
-      var tmpX = mapPinMain.offsetLeft - shift.x;
+      var tmpY = mapPinMainElement.offsetTop - shift.y;
+      var tmpX = mapPinMainElement.offsetLeft - shift.x;
 
       if (tmpY < data.MIN_Y) {
         tmpY = data.MIN_Y + 'px';
@@ -219,7 +210,7 @@
       } else {
         tmpY = tmpY + 'px';
       }
-      mapPinMain.style.top = tmpY;
+      mapPinMainElement.style.top = tmpY;
 
       if (tmpX < data.MIN_X) {
         tmpX = data.MIN_X + 'px';
@@ -228,8 +219,8 @@
       } else {
         tmpX = tmpX + 'px';
       }
-      mapPinMain.style.left = tmpX;
-      addressCoordinatePin.value = defineCoordinatePin(mapPinMain);
+      mapPinMainElement.style.left = tmpX;
+      addressCoordinatePinElement.value = defineCoordinatePin(mapPinMainElement);
 
     };
 
@@ -242,9 +233,9 @@
       if (dragged) {
         var onClickPreventDefault = function (evtDr) {
           evtDr.preventDefault();
-          mapPinMain.removeEventListener('click', onClickPreventDefault);
+          mapPinMainElement.removeEventListener('click', onClickPreventDefault);
         };
-        mapPinMain.addEventListener('click', onClickPreventDefault);
+        mapPinMainElement.addEventListener('click', onClickPreventDefault);
       }
 
     };
@@ -253,80 +244,78 @@
     document.addEventListener('mouseup', onMouseUp);
   });
 
-  // сбрасываем форму в начальное неактивное состояние
-  window.map.initForm();
-
-
-  var successHandler = function (loadAdvertize) {
-    aAdvertize = [];
+  // ф-ция callback при успешной загрузке данных
+  var onSuccessGetData = function (loadAdvertize) {
+    aAdvertizes = [];
     for (var ii = 0; ii < loadAdvertize.length; ii++) {
-      aAdvertize.push(loadAdvertize[ii]);
-      aAdvertize[ii].id = ii;
-      aAdvertize[ii].rank = null;
+      aAdvertizes.push(loadAdvertize[ii]);
+      aAdvertizes[ii].id = ii;
+      aAdvertizes[ii].rank = null;
     }
+    updateFilter();
     generatePins(5); // загружаем 5 меток (ТЗ)
     loadCard(5); // загружаем все объявления
   };
 
-  var errorHandler = function (errorMessage) {
+  // ф-ция callback при неуспешной загрузке данных
+  var onErrorGetData = function (errorMessage) {
     message.showMessageErrorSendForm('Ошибка! Объявления не были загружены ' + errorMessage);
   };
 
-  // ф-ции работы с фильтром
-
+  // ф-ция подсчета ранга у текущего объекта-объявления
   var getRank = function (objCard) {
     var rank = 0;
     if ((objCard.offer.type === filterAdvertize['housing-type'][0]) && (filterAdvertize['housing-type'][0])) {
-      rank += 512;
+      rank += filterAdvertize['housing-type'][1];
     }
 
     switch (filterAdvertize['housing-price'][0]) {
       case 'middle':
         if (objCard.offer.price >= 10000 && objCard.offer.price <= 50000) {
-          rank += 256;
+          rank += filterAdvertize['housing-price'][1];
         }
         break;
       case 'low':
         if (objCard.offer.price < 10000) {
-          rank += 256;
+          rank += filterAdvertize['housing-price'][1];
         }
         break;
       case 'high':
         if (objCard.offer.price > 50000) {
-          rank += 256;
+          rank += filterAdvertize['housing-price'][1];
         }
         break;
     }
     if ((objCard.offer.rooms === parseInt(filterAdvertize['housing-rooms'][0], 10)) && (filterAdvertize['housing-rooms'][0])) {
-      rank += 128;
+      rank += filterAdvertize['housing-rooms'][1];
     }
 
     if ((objCard.offer.guests === parseInt(filterAdvertize['housing-guests'][0], 10)) && (filterAdvertize['housing-guests'][0])) {
-      rank += 64;
+      rank += filterAdvertize['housing-guests'][1];
     }
 
     if (~objCard.offer.features.indexOf(filterAdvertize['filter-wifi'][0]) && (filterAdvertize['filter-wifi'][0])) {
-      rank += 32;
+      rank += filterAdvertize['filter-wifi'][1];
     }
 
     if (~objCard.offer.features.indexOf(filterAdvertize['filter-dishwasher'][0]) && (filterAdvertize['filter-dishwasher'][0])) {
-      rank += 16;
+      rank += filterAdvertize['filter-dishwasher'][1];
     }
 
     if (~objCard.offer.features.indexOf(filterAdvertize['filter-parking'][0]) && (filterAdvertize['filter-parking'][0])) {
-      rank += 8;
+      rank += filterAdvertize['filter-parking'][1];
     }
 
     if (~objCard.offer.features.indexOf(filterAdvertize['filter-washer'][0]) && (filterAdvertize['filter-washer'][0])) {
-      rank += 4;
+      rank += filterAdvertize['filter-washer'][1];
     }
 
     if (~objCard.offer.features.indexOf(filterAdvertize['filter-elevator'][0]) && (filterAdvertize['filter-elevator'][0])) {
-      rank += 2;
+      rank += filterAdvertize['filter-elevator'][1];
     }
 
     if (~objCard.offer.features.indexOf(filterAdvertize['filter-conditioner'][0]) && (filterAdvertize['filter-conditioner'][0])) {
-      rank += 1;
+      rank += filterAdvertize['filter-conditioner'][1];
     }
     objCard.rank = rank;
     return rank;
@@ -346,17 +335,18 @@
     'filter-conditioner': ['', 1]
   };
 
-  function sumMask(filterAdv) {
+  var sumMask = function (filterAdv) {
     var mask = 0;
     for (var key in filterAdv) {
       if (filterAdv[key][0]) {
-        mask += parseInt(filterAdv[key][1], 10);
+        mask += filterAdv[key][1];
       }
     }
     return mask;
-  }
+  };
 
-  function namesComparator(leftName, rightName) {
+  // ф-ция определяющая порядок сортировки по 2-му критерию (свойство title у объекта-объявления)
+  var compareNamesForSort = function (leftName, rightName) {
     if (leftName > rightName) {
       return 1;
     } else if (leftName < rightName) {
@@ -364,22 +354,26 @@
     } else {
       return 0;
     }
-  }
-  function advertizeComparator(left, right) {
-    var rankDiff = getRank(right) - getRank(left);
-    return rankDiff === 0 ? namesComparator(left.offer.title, right.offer.title) : rankDiff;
-  }
+  };
 
-  function onHousingFilterChange(evt) {
+  // ф-ция определяющая порядок сортировки по 1-му критерию (свойство rank у объекта-объявления)
+  var compareAdvertizeForSort = function (left, right) {
+    var rankDiff = getRank(right) - getRank(left);
+    return rankDiff === 0 ? compareNamesForSort(left.offer.title, right.offer.title) : rankDiff;
+  };
+
+  // обработчик изменения значения в поле input в форме фильтрации меток объявлений
+  var onHousingFilterChange = function (evt) {
     var valFilter = evt.currentTarget.value;
     filterAdvertize[evt.currentTarget.name][0] = '';
     if (valFilter !== 'any') {
       filterAdvertize[evt.currentTarget.name][0] = valFilter;
     }
     debounce(updateFilter);
-  }
+  };
 
-  function onHousingFilterCheckBoxChange(evt) {
+  // обработчик изменения значения в поле checkbox в форме фильтрации меток объявлений
+  var onHousingFilterCheckBoxChange = function (evt) {
     var valFilter = evt.currentTarget.checked;
     var tempStr = evt.currentTarget.id;
     var valFilterForRelation = tempStr.substr(tempStr.indexOf('-') + 1, tempStr.length);
@@ -388,48 +382,50 @@
       filterAdvertize[evt.currentTarget.id][0] = valFilterForRelation;
     }
     debounce(updateFilter);
-  }
+  };
 
-  function updateFilter() {
-    filterPin(aAdvertize.sort(advertizeComparator));
-  }
+  var updateFilter = function () {
+    filterPin(aAdvertizes.sort(compareAdvertizeForSort));
+  };
 
-  var housingType = document.querySelector('#housing-type');
-  var housingPrice = document.querySelector('#housing-price');
-  var housingRooms = document.querySelector('#housing-rooms');
-  var housingGuests = document.querySelector('#housing-guests');
+  var housingTypeElement = document.querySelector('#housing-type');
+  var housingPriceElement = document.querySelector('#housing-price');
+  var housingRoomsElement = document.querySelector('#housing-rooms');
+  var housingGuestsElement = document.querySelector('#housing-guests');
 
-  var filterWifi = document.querySelector('#filter-wifi');
-  var filterDishwasher = document.querySelector('#filter-dishwasher');
-  var filterParking = document.querySelector('#filter-parking');
-  var filterWasher = document.querySelector('#filter-washer');
-  var filterElevator = document.querySelector('#filter-elevator');
-  var filterConditioner = document.querySelector('#filter-conditioner');
+  var filterWifiElement = document.querySelector('#filter-wifi');
+  var filterDishwasherElement = document.querySelector('#filter-dishwasher');
+  var filterParkingElement = document.querySelector('#filter-parking');
+  var filterWasherElement = document.querySelector('#filter-washer');
+  var filterElevatorElement = document.querySelector('#filter-elevator');
+  var filterConditionerElement = document.querySelector('#filter-conditioner');
 
-  housingType.addEventListener('change', onHousingFilterChange);
-  housingPrice.addEventListener('change', onHousingFilterChange);
-  housingRooms.addEventListener('change', onHousingFilterChange);
-  housingGuests.addEventListener('change', onHousingFilterChange);
-  filterWifi.addEventListener('change', onHousingFilterCheckBoxChange);
-  filterDishwasher.addEventListener('change', onHousingFilterCheckBoxChange);
-  filterParking.addEventListener('change', onHousingFilterCheckBoxChange);
-  filterWasher.addEventListener('change', onHousingFilterCheckBoxChange);
-  filterElevator.addEventListener('change', onHousingFilterCheckBoxChange);
-  filterConditioner.addEventListener('change', onHousingFilterCheckBoxChange);
+  housingTypeElement.addEventListener('change', onHousingFilterChange);
+  housingPriceElement.addEventListener('change', onHousingFilterChange);
+  housingRoomsElement.addEventListener('change', onHousingFilterChange);
+  housingGuestsElement.addEventListener('change', onHousingFilterChange);
+  filterWifiElement.addEventListener('change', onHousingFilterCheckBoxChange);
+  filterDishwasherElement.addEventListener('change', onHousingFilterCheckBoxChange);
+  filterParkingElement.addEventListener('change', onHousingFilterCheckBoxChange);
+  filterWasherElement.addEventListener('change', onHousingFilterCheckBoxChange);
+  filterElevatorElement.addEventListener('change', onHousingFilterCheckBoxChange);
+  filterConditionerElement.addEventListener('change', onHousingFilterCheckBoxChange);
 
   // ф-ция загрузки меток и карточек объявлений при фильтрации
-  function filterPin() {
+  var filterPin = function () {
     deleteElementsMap(pinListElement, '.map__pin');
     closeCard(null);
-    var takeNumber = aAdvertize.length > 5 ? 5 : aAdvertize.length;
+    var takeNumber = aAdvertizes.length > 5 ? 5 : aAdvertizes.length;
     var sMask = sumMask(filterAdvertize);
     generatePins(takeNumber, sMask);
     loadCard(takeNumber, sMask);
-    aAdvertize.forEach(function (adv) {
+    aAdvertizes.forEach(function (adv) {
       adv.rank = 0;
     });
+  };
 
-  }
+  // сбрасываем форму в начальное неактивное состояние
+  window.map.initForm();
 
 })();
 

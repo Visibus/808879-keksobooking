@@ -2,7 +2,7 @@
 
 (function () {
   // блок из шаблона, на основе которого будут добавлены карточки объявлений
-  var cardTemplate = document.querySelector('#card').content.querySelector('.map__card');
+  var cardTemplateElement = document.querySelector('#card').content.querySelector('.map__card');
 
   var typeHousing = {
     flat: 'Квартира',
@@ -13,7 +13,7 @@
 
   // функция создания DOM-элемента (карточка объявления) на основе JS-объекта
   window.renderCard = function (objCard, cb) {
-    var cardElement = cardTemplate.cloneNode(true);
+    var cardElement = cardTemplateElement.cloneNode(true);
     var data = window.data;
     cardElement.classList.add('hidden'); // скрываем форму объявления
     // в разметку элемента карточки объявления добавлен аттрибут для привязки карточки объявления и метки объявления
@@ -56,8 +56,8 @@
 
     cardElement.querySelector('.popup__avatar').setAttribute('src', objCard.author.avatar);
 
-    var cardForEvent = cardElement.querySelector('.popup__close');
-    cardForEvent.addEventListener('click', cb);
+    var cardForEventElement = cardElement.querySelector('.popup__close');
+    cardForEventElement.addEventListener('click', cb);
 
     return cardElement;
 

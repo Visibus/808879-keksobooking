@@ -5,52 +5,63 @@
   var ESC_KEYCODE = 27;
 
   // блок из шаблона, на основе которого будут выведено сообщение об успешной отправке формы
-  var templForm = document.querySelector('#success').content.querySelector('.success');
+  var templFormElement = document.querySelector('#success').content.querySelector('.success');
   // блок, куда будет вставлен блок об успешной отправке формы
-  var elemForm = document.querySelector('main');
+  var formElement = document.querySelector('main');
   // блок с сообщением об успешном отправлении формы
-  var elemSuccess = document.querySelector('.success');
+  var successElement = document.querySelector('.success');
   // блок из шаблона, на основе которого будут выведено сообщение об ошибке при отправке формы
-  var templFormErr = document.querySelector('#error').content.querySelector('.error');
-  // блок с сообщением об успешном отправлении формы
-  var elemError = document.querySelector('.error');
+  var templFormErrElement = document.querySelector('#error').content.querySelector('.error');
+  // блок с сообщением о неуспешном отправлении формы
+  var errorElement = document.querySelector('.error');
 
-  function onShowMessageSuccesSendFormClose(evt) {
-    if (evt.keyCode === ESC_KEYCODE) {
-      var elemSucc = document.querySelector('.success');
-      elemForm.removeChild(elemSucc);
-      document.removeEventListener('keydown', onShowMessageSuccesSendFormClose);
+  var closeShowMessageSuccess = function () {
+    var succElement = document.querySelector('.success');
+    if (succElement) {
+      formElement.removeChild(succElement);
     }
-  }
+    document.removeEventListener('keydown', onShowMessageSuccesSendFormClose);
+  };
 
-  function onShowMessageErrorSendFormClose(evt) {
-    if (evt.keyCode === ESC_KEYCODE) {
-      var elemErr = document.querySelector('.error');
-      elemForm.removeChild(elemErr);
-      document.removeEventListener('keydown', onShowMessageErrorSendFormClose);
+  var closeShowMessageError = function () {
+    var errElement = document.querySelector('.error');
+    if (errElement) {
+      formElement.removeChild(errElement);
     }
-  }
+    document.removeEventListener('keydown', onShowMessageErrorSendFormClose);
+  };
+
+  // обработчик на закрытие формы при успешном запросе GET/POST на сервер
+  var onShowMessageSuccesSendFormClose = function (evt) {
+    if (evt.keyCode === ESC_KEYCODE) {
+      closeShowMessageSuccess();
+    }
+  };
+
+  // обработчик на закрытие формы при неуспешном запросе GET/POST на сервер
+  var onShowMessageErrorSendFormClose = function (evt) {
+    if (evt.keyCode === ESC_KEYCODE) {
+      closeShowMessageError();
+    }
+  };
 
   window.message = {
     showMessageSuccessSendForm: function () {
-      elemForm.appendChild(templForm);
-      elemSuccess = document.querySelector('.success');
-
-      elemSuccess.addEventListener('click', function () {
-        elemForm.removeChild(elemSuccess);
+      formElement.appendChild(templFormElement);
+      successElement = document.querySelector('.success');
+      successElement.addEventListener('click', function () {
+        closeShowMessageSuccess();
       });
-
       document.addEventListener('keydown', onShowMessageSuccesSendFormClose);
     },
+
     showMessageErrorSendForm: function (errMess) {
-      elemForm.appendChild(templFormErr);
-      elemError = document.querySelector('.error');
-      elemError.querySelector('.error__message').textContent = errMess;
-
-      elemError.addEventListener('click', function () {
-        elemForm.removeChild(elemError);
+      formElement.appendChild(templFormErrElement);
+      errorElement = document.querySelector('.error');
+      errorElement.querySelector('.error__message').textContent = errMess;
+      errorElement.addEventListener('click', function () {
+        closeShowMessageError();
       });
-
       document.addEventListener('keydown', onShowMessageErrorSendFormClose);
     }
   };

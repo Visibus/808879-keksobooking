@@ -13,7 +13,6 @@
     },
     save: function (data, onLoad, onError) {
       var xhr = xhrCreate(onLoad, onError);
-      // debugger;
       xhr.open('POST', URL_POST);
       xhr.send(data);
 

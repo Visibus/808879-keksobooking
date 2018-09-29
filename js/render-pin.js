@@ -10,9 +10,9 @@
     // в разметку элемента метки добавлен аттрибут data-id для связи элемента и JS-объекта
     pinElement.setAttribute('data-id', objPin.id);
     pinElement.setAttribute('style', 'left: ' + objPin.location.x + 'px; top: ' + objPin.location.y + 'px;');
-    var pinElementImg = pinElement.querySelector('img');
-    pinElementImg.setAttribute('src', objPin.author.avatar);
-    pinElementImg.setAttribute('alt', 'заголовок объявления');
+    var pinImgElement = pinElement.querySelector('img');
+    pinImgElement.setAttribute('src', objPin.author.avatar);
+    pinImgElement.setAttribute('alt', 'заголовок объявления');
     pinElement.addEventListener('click', cb);
     return pinElement;
   };
