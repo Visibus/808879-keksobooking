@@ -104,33 +104,56 @@
 
   // функция показа формы карточки объявления
   var showCard = function (idPin) {
+
+    var listPinsElement = document.querySelectorAll('.map__pin');
+    for (var indPin = 0; indPin < listPinsElement.length; indPin++) {
+      var itemPinElement = listPinsElement[indPin];
+      if (itemPinElement.getAttribute('data-id') === idPin) {
+        itemPinElement.setAttribute('class', 'map__pin map__pin--active');
+      } else if (itemPinElement.hasAttribute('data-id')) {
+        itemPinElement.setAttribute('class', 'map__pin');
+      }
+    }
     var listCardsElement = document.querySelectorAll('.map__card');
     for (var indCard = 0; indCard < listCardsElement.length; indCard++) {
       var itemCardElement = listCardsElement[indCard];
       if (itemCardElement.getAttribute('data-id') === idPin) {
-        itemCardElement.classList.remove('hidden');
+        itemCardElement.setAttribute('class', 'map__card popup');
       } else {
-        itemCardElement.classList.add('hidden');
+        itemCardElement.setAttribute('class', 'map__card popup hidden');
       }
     }
   };
 
   // функция, скрывающая форму карточки объявления
   var closeCard = function (idPin) {
+    var listPinsElement = document.querySelectorAll('.map__pin');
+    for (var indPin = 0; indPin < listPinsElement.length; indPin++) {
+      var itemPinElement = listPinsElement[indPin];
+      if (itemPinElement.hasAttribute('data-id')) {
+        itemPinElement.setAttribute('class', 'map__pin');
+      }
+    }
     var listCardsElement = document.querySelectorAll('.map__card');
     for (var indCard = 0; indCard < listCardsElement.length; indCard++) {
       var itemCardElement = listCardsElement[indCard];
       if ((itemCardElement.getAttribute('data-id') === idPin) || (idPin === null)) {
-        itemCardElement.classList.add('hidden');
+        itemCardElement.setAttribute('class', 'map__card popup hidden');
       }
     }
   };
 
   // функция перевода формы в невактивное/активное состояние
   var formActivate = function (activate) {
-    mapShowElement.classList.toggle('map--faded', !activate);
-    adFormElement.classList.toggle('ad-form--disabled', !activate);
-    mapFiltersElement.classList.toggle('ad-form--disabled', !activate);
+    if (activate) {
+      mapShowElement.setAttribute('class', 'map');
+      adFormElement.setAttribute('class', 'ad-form');
+      mapFiltersElement.setAttribute('class', 'map__filters');
+    } else {
+      mapShowElement.setAttribute('class', 'map map--faded');
+      adFormElement.setAttribute('class', 'ad-form ad-form--disabled');
+      mapFiltersElement.setAttribute('class', 'map__filters ad-form--disabled');
+    }
 
     var childElement = adFormElement.querySelectorAll('fieldset');
     for (var i = 0; i < childElement.length; i++) {
@@ -146,6 +169,7 @@
   var onPinClick = function (evt) {
     if (evt.currentTarget.hasAttribute('data-id')) {
       showCard(evt.currentTarget.getAttribute('data-id'));
+      document.addEventListener('keydown', onCardButtonCloseKey);
       addressCoordinatePinElement.value = defineCoordinatePin(evt.currentTarget);
     }
   };
@@ -155,6 +179,14 @@
     if (evt.currentTarget.parentElement.hasAttribute('data-id')) {
       closeCard(evt.currentTarget.parentElement.getAttribute('data-id'));
     }
+    document.removeEventListener('keydown', onCardButtonCloseKey);
+  };
+
+  var onCardButtonCloseKey = function (evt) {
+    if (evt.keyCode === data.ESC_KEYCODE) {
+      closeCard(null);
+    }
+    document.removeEventListener('keydown', onCardButtonCloseKey);
   };
 
   // событие на перетаскивание метки объявления
@@ -372,16 +404,34 @@
     debounce(updateFilter);
   };
 
-  // обработчик изменения значения в поле checkbox в форме фильтрации меток объявлений
-  var onHousingFilterCheckBoxChange = function (evt) {
-    var valFilter = evt.currentTarget.checked;
-    var tempStr = evt.currentTarget.id;
+  // ф-ция установки свойств объекта-фильтрации для checkbox
+  var setFilterInCheckBox = function (evtFilter) {
+    var valFilter = evtFilter.currentTarget.checked;
+    var tempStr = evtFilter.currentTarget.id;
     var valFilterForRelation = tempStr.substr(tempStr.indexOf('-') + 1, tempStr.length);
-    filterAdvertize[evt.currentTarget.id][0] = '';
+    filterAdvertize[evtFilter.currentTarget.id][0] = '';
     if (valFilter) {
-      filterAdvertize[evt.currentTarget.id][0] = valFilterForRelation;
+      filterAdvertize[evtFilter.currentTarget.id][0] = valFilterForRelation;
     }
     debounce(updateFilter);
+
+  };
+
+  // обработчик изменения значения в поле checkbox в форме фильтрации меток объявлений
+  var onHousingFilterCheckBoxChange = function (evt) {
+    setFilterInCheckBox(evt);
+  };
+
+  // обработчик изменения значения в поле checkbox в форме фильтрации меток объявлений по нажатию ENTER
+  var onHousingFilterCheckBoxKeyDown = function (evt) {
+    if (evt.keyCode === data.ENTER_KEYCODE) {
+      if (evt.currentTarget.checked) {
+        evt.currentTarget.checked = false;
+      } else {
+        evt.currentTarget.checked = true;
+      }
+      setFilterInCheckBox(evt);
+    }
   };
 
   var updateFilter = function () {
@@ -411,9 +461,17 @@
   filterElevatorElement.addEventListener('change', onHousingFilterCheckBoxChange);
   filterConditionerElement.addEventListener('change', onHousingFilterCheckBoxChange);
 
+  filterWifiElement.addEventListener('keydown', onHousingFilterCheckBoxKeyDown);
+  filterDishwasherElement.addEventListener('keydown', onHousingFilterCheckBoxKeyDown);
+  filterParkingElement.addEventListener('keydown', onHousingFilterCheckBoxKeyDown);
+  filterWasherElement.addEventListener('keydown', onHousingFilterCheckBoxKeyDown);
+  filterElevatorElement.addEventListener('keydown', onHousingFilterCheckBoxKeyDown);
+  filterConditionerElement.addEventListener('keydown', onHousingFilterCheckBoxKeyDown);
+
   // ф-ция загрузки меток и карточек объявлений при фильтрации
   var filterPin = function () {
     deleteElementsMap(pinListElement, '.map__pin');
+    deleteElementsMap(mapShowElement, '.map__card');
     closeCard(null);
     var takeNumber = aAdvertizes.length > 5 ? 5 : aAdvertizes.length;
     var sMask = sumMask(filterAdvertize);

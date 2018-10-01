@@ -3,6 +3,8 @@
 
 (function () {
   window.data = {
+    ESC_KEYCODE: 27,
+    ENTER_KEYCODE: 13,
     MIN_Y: 130,
     MAX_Y: 630,
     MIN_X: 0,

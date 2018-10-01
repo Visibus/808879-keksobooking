@@ -2,8 +2,6 @@
 'use strict';
 
 (function () {
-  var ESC_KEYCODE = 27;
-
   // блок из шаблона, на основе которого будут выведено сообщение об успешной отправке формы
   var templFormElement = document.querySelector('#success').content.querySelector('.success');
   // блок, куда будет вставлен блок об успешной отправке формы
@@ -14,6 +12,8 @@
   var templFormErrElement = document.querySelector('#error').content.querySelector('.error');
   // блок с сообщением о неуспешном отправлении формы
   var errorElement = document.querySelector('.error');
+
+  var data = window.data;
 
   var closeShowMessageSuccess = function () {
     var succElement = document.querySelector('.success');
@@ -33,14 +33,14 @@
 
   // обработчик на закрытие формы при успешном запросе GET/POST на сервер
   var onShowMessageSuccesSendFormClose = function (evt) {
-    if (evt.keyCode === ESC_KEYCODE) {
+    if (evt.keyCode === data.ESC_KEYCODE) {
       closeShowMessageSuccess();
     }
   };
 
   // обработчик на закрытие формы при неуспешном запросе GET/POST на сервер
   var onShowMessageErrorSendFormClose = function (evt) {
-    if (evt.keyCode === ESC_KEYCODE) {
+    if (evt.keyCode === data.ESC_KEYCODE) {
       closeShowMessageError();
     }
   };

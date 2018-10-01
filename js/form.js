@@ -11,6 +11,7 @@
     palace: 10000
   };
 
+  var data = window.data;
   var map = window.map;
   var units = window.units;
   var backend = window.backend;
@@ -31,6 +32,13 @@
   var advertizeRoomNumberElement = document.querySelector('#room_number');
   // количество мест
   var advertizeCapacityElement = document.querySelector('#capacity');
+
+  var advertizeWifiElement = document.querySelector('#feature-wifi');
+  var advertizeDishwasherElement = document.querySelector('#feature-dishwasher');
+  var advertizeParkingElement = document.querySelector('#feature-parking');
+  var advertizeWasherElement = document.querySelector('#feature-washer');
+  var advertizeElevatorElement = document.querySelector('#feature-elevator');
+  var advertizeConditionerElement = document.querySelector('#feature-conditioner');
 
   // ф-ция callback, выполняемая при успешной загрузке формы на сервер
   var onSuccessSaveData = function () {
@@ -67,11 +75,7 @@
     // ф-ция синхронизации значений в полях "время заезда" и "время выезда"
   var synchronizeTimeInOut = function (elemTime, valTime) {
     for (var indTime = 0; indTime < elemTime.length; indTime++) {
-      if (parseInt(elemTime[indTime].value, 10) === valTime) {
-        elemTime[indTime].selected = true;
-      } else {
-        elemTime[indTime].selected = false;
-      }
+      elemTime[indTime].selected = parseInt(elemTime[indTime].value, 10) === valTime ? true : false;
     }
   };
 
@@ -113,6 +117,18 @@
     }
   };
 
+  // обработчик изменения значения в поле checkbox в форме фильтрации меток объявлений по нажатию ENTER
+  var onAdvertizeCheckBoxKeyDown = function (evt) {
+    if (evt.keyCode === data.ENTER_KEYCODE) {
+      if (evt.currentTarget.checked) {
+        evt.currentTarget.checked = false;
+      } else {
+        evt.currentTarget.checked = true;
+      }
+      evt.preventDefault();
+    }
+  };
+
   advertizeTypeElement.addEventListener('change', onAdvertizeInputTypeChange);
   advertizeTimeInElement.addEventListener('change', onAdvertizeTimeInOutChange);
   advertizeTimeOutElement.addEventListener('change', onAdvertizeTimeInOutChange);
@@ -120,6 +136,13 @@
   advertizeRoomNumberElement.addEventListener('input', onAdvertizeRoomNumberInput);
   advertizePriceElement.addEventListener('input', onAdvertizePriceInput);
   advertizeCapacityElement.addEventListener('input', onAdvertizeRoomNumberInput);
+
+  advertizeWifiElement.addEventListener('keydown', onAdvertizeCheckBoxKeyDown);
+  advertizeDishwasherElement.addEventListener('keydown', onAdvertizeCheckBoxKeyDown);
+  advertizeParkingElement.addEventListener('keydown', onAdvertizeCheckBoxKeyDown);
+  advertizeWasherElement.addEventListener('keydown', onAdvertizeCheckBoxKeyDown);
+  advertizeElevatorElement.addEventListener('keydown', onAdvertizeCheckBoxKeyDown);
+  advertizeConditionerElement.addEventListener('keydown', onAdvertizeCheckBoxKeyDown);
 
   // событие на нажатие кнопки "очистить"
   adFormResetElement.addEventListener('click', function (evt) {

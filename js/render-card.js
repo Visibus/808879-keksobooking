@@ -12,10 +12,10 @@
   };
 
   // функция создания DOM-элемента (карточка объявления) на основе JS-объекта
-  window.renderCard = function (objCard, cb) {
+  window.renderCard = function (objCard, onCloseClick) {
     var cardElement = cardTemplateElement.cloneNode(true);
     var data = window.data;
-    cardElement.classList.add('hidden'); // скрываем форму объявления
+    cardElement.setAttribute('class', 'map__card popup hidden');
     // в разметку элемента карточки объявления добавлен аттрибут для привязки карточки объявления и метки объявления
     cardElement.setAttribute('data-id', objCard.id);
     cardElement.querySelector('.popup__title').textContent = objCard.offer.title;
@@ -57,7 +57,7 @@
     cardElement.querySelector('.popup__avatar').setAttribute('src', objCard.author.avatar);
 
     var cardForEventElement = cardElement.querySelector('.popup__close');
-    cardForEventElement.addEventListener('click', cb);
+    cardForEventElement.addEventListener('click', onCloseClick);
 
     return cardElement;
 
